@@ -154,16 +154,35 @@
             background: rgba(15, 32, 39, 0.8);
             border: 1px solid rgba(0, 255, 127, 0.2);
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
             position: relative;
         }
-        .event-main { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-        .event-content { display: flex; align-items: center; gap: 12px; }
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: rgba(0, 255, 127, 0.9);
+        }
+        .event-main { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            gap: 12px;
+        }
+        .event-content { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px;
+            flex: 1;
+        }
         .event-controls { 
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            flex-shrink: 0;
         }
         .event-notes {
             font-size: 12px;
@@ -210,15 +229,29 @@
         }
         .event-time, .event-date { 
             color: rgba(0, 255, 127, 0.9);
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
-            padding: 2px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
             border: 1px solid transparent;
+            font-weight: 500;
         }
         .event-time:hover, .event-date:hover { 
             border-color: rgba(0, 255, 127, 0.5);
             background: rgba(0, 255, 127, 0.1);
+        }
+        .signal-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .signal-name {
+            font-size: 14px;
+            font-weight: 600;
+            min-width: 0;
+            flex: 1;
         }
         .stats { 
             display: grid;
@@ -357,11 +390,10 @@
                 </button>
                 
                 <button class="btn btn-pink" onclick="logEvent('bubu')" style="width: 100%;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2C8 2 5 5 5 9c0 2 1 4 3 5v6a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-6c2-1 3-3 3-5 0-4-3-7-7-7z"/>
-                        <circle cx="9" cy="9" r="1"/>
-                        <circle cx="15" cy="9" r="1"/>
-                        <path d="M9 13c1 1 3 1 4 0"/>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8 2 5 5 5 9c0 2 1 4 3 5v6a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-6c2-1 3-3 3-5 0-4-3-7-7-7z" fill="white"/>
+                        <circle cx="9" cy="9" r="1" fill="#ec4899"/>
+                        <circle cx="15" cy="9" r="1" fill="#ec4899"/>
                     </svg>
                     <span>BUBU</span>
                 </button>
@@ -721,19 +753,21 @@
                 const stateText = event.config.states[event.state];
                 html += `
                     <div class="event-item">
+                        <div class="event-header">
+                            <span class="event-date" onclick="editEventDate('${event.signalType}', ${event.index}, '${event.date}')">${event.date}</span>
+                            <span class="event-time" onclick="editEventTime('${event.signalType}', ${event.index}, '${event.time}', '${event.date}')">${event.time}</span>
+                        </div>
                         <div class="event-main">
                             <div class="event-content">
-                                <div style="width: 12px; height: 12px; border-radius: 50%; background: ${event.config.color};"></div>
+                                <div class="signal-indicator" style="background: ${event.config.color};"></div>
                                 <div>
-                                    <div style="font-weight: 600; font-size: 13px;">${event.config.name}</div>
+                                    <div class="signal-name">${event.config.name}</div>
                                     <div class="status-text">${stateText}</div>
                                 </div>
                             </div>
                             <div class="event-controls">
-                                <span class="event-date" onclick="editEventDate('${event.signalType}', ${event.index}, '${event.date}')">${event.date}</span>
-                                <span class="event-time" onclick="editEventTime('${event.signalType}', ${event.index}, '${event.time}', '${event.date}')">${event.time}</span>
                                 <div class="toggle-switch ${event.state === 1 ? 'active' : ''}" onclick="toggleSignalState('${event.signalType}', ${event.index})"></div>
-                                <button class="btn btn-small" onclick="updateNotes('${event.signalType}', ${event.index}, '${event.date}')" style="background: rgba(0, 255, 127, 0.1); border-color: rgba(0, 255, 127, 0.3);">
+                                <button class="btn btn-small" onclick="updateNotes('${event.signalType}', ${event.index}, '${event.date}')" style="background: rgba(0, 255, 127, 0.1); border-color: rgba(0, 255, 127, 0.3); padding: 6px 8px;">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                                         <polyline points="14,2 14,8 20,8"/>
@@ -742,7 +776,7 @@
                                         <polyline points="10,9 9,9 8,9"/>
                                     </svg>
                                 </button>
-                                <button class="btn btn-small delete-btn" onclick="deleteEvent('${event.signalType}', ${event.index}, '${event.date}')" style="background: rgba(255, 0, 0, 0.2); border-color: rgba(255, 0, 0, 0.3);">
+                                <button class="btn btn-small delete-btn" onclick="deleteEvent('${event.signalType}', ${event.index}, '${event.date}')" style="background: rgba(255, 0, 0, 0.2); border-color: rgba(255, 0, 0, 0.3); padding: 6px 8px;">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <polyline points="3,6 5,6 21,6"/>
                                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -839,11 +873,11 @@
                         dateStr = monthKeys[index] ? monthKeys[index] + '-01' : null;
                     }
                     
-                    if (dateStr && data[dateStr] && data[dateStr].signals[signalType]) {
+                    if (dateStr && data[dateStr] && data[dateStr].signals[signalType] && data[dateStr].signals[signalType].length > 0) {
                         const lastEvent = data[dateStr].signals[signalType][data[dateStr].signals[signalType].length - 1];
-                        stepData.push(yOffset + (lastEvent ? lastEvent.state : 0));
+                        stepData.push(yOffset + lastEvent.state);
                     } else {
-                        stepData.push(yOffset);
+                        stepData.push(null); // Break continuity for non-logged dates
                     }
                 });
 
@@ -854,7 +888,10 @@
                     backgroundColor: config.color + '20',
                     stepped: true,
                     fill: false,
-                    tension: 0
+                    tension: 0,
+                    spanGaps: false,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 });
 
                 yOffset += 1.5; // Stack signals vertically
