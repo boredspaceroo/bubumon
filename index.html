@@ -444,9 +444,15 @@
                     </svg>
                     <span>SIGNAL TRENDS</span>
                 </div>
+                <div class="chart-toggle">
+                    <button id="trendWeekBtn" class="btn-active" onclick="showTrendChart('week')">WEEK</button>
+                    <button id="trendMonthBtn" onclick="showTrendChart('month')">MONTH</button>
+                    <button id="trendAllBtn" onclick="showTrendChart('allTime')">ALL TIME</button>
+                </div>
                 <div class="chart-container">
                     <canvas id="trendChart"></canvas>
                 </div>
+                <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Y-Axis: Signal state (0=Off/Hidden/Down/Passive, 1=On/Visible/Up/Active)</div>
             </div>
 
             <div class="card">
@@ -455,11 +461,12 @@
                         <rect x="3" y="3" width="18" height="18" rx="2"/>
                         <path d="M9 9h6v6H9z"/>
                     </svg>
-                    <span>HEAT SIGNATURE</span>
+                    <span>DAILY ACTIVITY</span>
                 </div>
                 <div class="chart-container">
                     <canvas id="heatmapChart"></canvas>
                 </div>
+                <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Y-Axis: Total number of signals logged per day</div>
             </div>
 
             <div class="card">
@@ -468,11 +475,12 @@
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12,6 12,12 16,14"/>
                     </svg>
-                    <span>TEMPORAL ANALYSIS</span>
+                    <span>HOURLY PATTERNS</span>
                 </div>
                 <div class="chart-container">
                     <canvas id="timeChart"></canvas>
                 </div>
+                <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Y-Axis: Number of signals logged at each hour (all time)</div>
             </div>
 
             <div class="card">
@@ -481,11 +489,12 @@
                         <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
                         <path d="M22 12A10 10 0 0 0 12 2v10z"/>
                     </svg>
-                    <span>SIGNAL DISTRIBUTION</span>
+                    <span>SIGNAL DISTRIBUTION (ALL TIME)</span>
                 </div>
                 <div class="chart-container">
                     <canvas id="pieChart"></canvas>
                 </div>
+                <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Shows percentage breakdown of all signal types ever logged</div>
             </div>
         </div>
     </div>
@@ -494,6 +503,7 @@
         let data = {};
         let currentView = 'scanner';
         let currentChartView = 'week';
+        let currentTrendView = 'week';
         let currentDate = getLocalDateString();
         let activityChart = null;
         let trendChart = null;
@@ -503,10 +513,10 @@
 
         const APP_VERSION = '2.0';
         const SIGNAL_TYPES = {
-            transporter: { name: 'Transporter', color: '#6b8e23', states: ['Visible', 'Hidden'] },
+            transporter: { name: 'Transporter', color: '#6b8e23', states: ['Hidden', 'Visible'] },
             tractorBeam: { name: 'Tractor Beam', color: '#8b5cf6', states: ['Down', 'Up'] },
-            plasma: { name: 'Plasma', color: '#eab308', states: ['On', 'Off'] },
-            bubu: { name: 'Bubu', color: '#ec4899', states: ['Contact', 'Passive'] }
+            plasma: { name: 'Plasma', color: '#eab308', states: ['Off', 'On'] },
+            bubu: { name: 'Bubu', color: '#ec4899', states: ['Passive', 'Active'] }
         };
 
         // Get local date string (not UTC)
@@ -976,6 +986,15 @@
             document.getElementById('dashboardStats').innerHTML = statsHtml;
         }
 
+        // Show trend chart
+        function showTrendChart(view) {
+            currentTrendView = view;
+            document.getElementById('trendWeekBtn').classList.toggle('btn-active', view === 'week');
+            document.getElementById('trendMonthBtn').classList.toggle('btn-active', view === 'month');
+            document.getElementById('trendAllBtn').classList.toggle('btn-active', view === 'allTime');
+            updateTrendChart();
+        }
+
         // Update additional charts (simplified versions)
         function updateAdditionalCharts() {
             updateTrendChart();
@@ -986,7 +1005,7 @@
 
         function updateTrendChart() {
             const ctx = document.getElementById('trendChart').getContext('2d');
-            const chartData = getChartData('allTime');
+            const chartData = getChartData(currentTrendView);
 
             if (trendChart) trendChart.destroy();
 
@@ -999,7 +1018,23 @@
                     plugins: { legend: { labels: { color: '#00ff7f' } } },
                     scales: {
                         x: { ticks: { color: '#00ff7f' }, grid: { color: 'rgba(0, 255, 127, 0.1)' } },
-                        y: { ticks: { color: '#00ff7f' }, grid: { color: 'rgba(0, 255, 127, 0.1)' } }
+                        y: { 
+                            beginAtZero: true,
+                            max: Object.keys(SIGNAL_TYPES).length * 1.5,
+                            ticks: { 
+                                color: '#00ff7f',
+                                stepSize: 1,
+                                callback: function(value) {
+                                    const signalIndex = Math.floor(value / 1.5);
+                                    const signalKeys = Object.keys(SIGNAL_TYPES);
+                                    if (signalIndex < signalKeys.length && value % 1.5 === 0) {
+                                        return SIGNAL_TYPES[signalKeys[signalIndex]].name;
+                                    }
+                                    return '';
+                                }
+                            }, 
+                            grid: { color: 'rgba(0, 255, 127, 0.1)' } 
+                        }
                     }
                 }
             });
@@ -1030,7 +1065,7 @@
                 data: {
                     labels: heatmapData.map(d => d.date),
                     datasets: [{
-                        label: 'Daily Signals',
+                        label: 'Signals Per Day',
                         data: heatmapData.map(d => d.total),
                         backgroundColor: '#6b8e23'
                     }]
@@ -1041,7 +1076,17 @@
                     plugins: { legend: { labels: { color: '#00ff7f' } } },
                     scales: {
                         x: { ticks: { color: '#00ff7f' }, grid: { color: 'rgba(0, 255, 127, 0.1)' } },
-                        y: { ticks: { color: '#00ff7f' }, grid: { color: 'rgba(0, 255, 127, 0.1)' } }
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { 
+                                color: '#00ff7f',
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return Number.isInteger(value) ? value : '';
+                                }
+                            }, 
+                            grid: { color: 'rgba(0, 255, 127, 0.1)' } 
+                        }
                     }
                 }
             });
@@ -1067,11 +1112,11 @@
             timeChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    labels: Array.from({length: 24}, (_, i) => `${String(i).padStart(2, '0')}:00`),
                     datasets: [{
-                        label: 'Signals by Hour',
+                        label: 'Signal Count',
                         data: hourData,
-                        backgroundColor: '#6b8e23'
+                        backgroundColor: '#8b5cf6'
                     }]
                 },
                 options: {
@@ -1080,7 +1125,17 @@
                     plugins: { legend: { labels: { color: '#00ff7f' } } },
                     scales: {
                         x: { ticks: { color: '#00ff7f' }, grid: { color: 'rgba(0, 255, 127, 0.1)' } },
-                        y: { ticks: { color: '#00ff7f' }, grid: { color: 'rgba(0, 255, 127, 0.1)' } }
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { 
+                                color: '#00ff7f',
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return Number.isInteger(value) ? value : '';
+                                }
+                            }, 
+                            grid: { color: 'rgba(0, 255, 127, 0.1)' } 
+                        }
                     }
                 }
             });
