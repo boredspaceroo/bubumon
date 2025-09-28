@@ -523,7 +523,7 @@
                         <polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/>
                         <polyline points="16,7 22,7 22,13"/>
                     </svg>
-                    <span>TEMPORAL SWITCH PATTERN</span>
+                    <span>TEMPORAL SWITCH PATTERNS</span>
                 </div>
                 
                 <div class="week-nav">
@@ -552,25 +552,43 @@
                         <rect x="3" y="3" width="18" height="18" rx="2"/>
                         <path d="M9 9h6v6H9z"/>
                     </svg>
-                    <span>WEEKLY PATTERNS</span>
+                    <span>TEMPORAL HEATMAP</span>
                 </div>
                 <div class="weekly-grid" id="weeklyGrid">
                     <!-- Grid will be populated by JavaScript -->
                 </div>
             </div>
 
-            <div class="stats-container">
+            <div class="card">
                 <div class="section-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12,6 12,12 16,14"/>
                     </svg>
-                    <span>TEMPORAL REGISTRIES</span>
+                    <span>TEMPORAL LOG</span>
                 </div>
-                <div class="stats" id="dashboardStats">
-                    <!-- Stats will be populated by JavaScript -->
+                
+                <div class="week-nav">
+                    <button class="week-nav-btn" onclick="changeLogDay(-1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15,18 9,12 15,6"/>
+                        </svg>
+                    </button>
+                    <div class="week-label" id="logDayLabel"></div>
+                    <button class="week-nav-btn" onclick="changeLogDay(1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9,18 15,12 9,6"/>
+                        </svg>
+                    </button>
                 </div>
+                
+                <div class="chart-container">
+                    <canvas id="timeChart"></canvas>
+                </div>
+                <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Y-Axis: Number of logs per hour. Tap bars for state details.</div>
             </div>
+
+
 
             <div class="card">
                 <div class="section-title">
@@ -586,32 +604,17 @@
                 <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Y-Axis: Total number of signals logged per day</div>
             </div>
 
-            <div class="card">
+            <div class="stats-container">
                 <div class="section-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12,6 12,12 16,14"/>
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                     </svg>
-                    <span>HOURLY PATTERNS</span>
+                    <span>TEMPORAL REGISTRIES</span>
                 </div>
-                <div class="chart-container">
-                    <canvas id="timeChart"></canvas>
+                <div class="stats" id="dashboardStats">
+                    <!-- Stats will be populated by JavaScript -->
                 </div>
-                <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Y-Axis: Number of signals logged at each hour (all time)</div>
-            </div>
-
-            <div class="card">
-                <div class="section-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
-                        <path d="M22 12A10 10 0 0 0 12 2v10z"/>
-                    </svg>
-                    <span>SIGNAL DISTRIBUTION (ALL TIME)</span>
-                </div>
-                <div class="chart-container">
-                    <canvas id="pieChart"></canvas>
-                </div>
-                <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Shows percentage breakdown of all signal types ever logged</div>
             </div>
         </div>
     </div>
@@ -622,12 +625,13 @@
         let currentChartView = 'week';
         let currentTrendView = 'week';
         let currentWeekOffset = 0;
+        let currentLogDay = getLocalDateString();
         let currentDate = getLocalDateString();
         let activityChart = null;
         let trendChart = null;
         let heatmapChart = null;
         let timeChart = null;
-        let pieChart = null;
+
 
         const APP_VERSION = '2.0';
         const SIGNAL_TYPES = {
@@ -864,6 +868,14 @@
             currentWeekOffset += direction;
             updateChart();
             updateWeeklyPatterns();
+        }
+
+        // Change log day
+        function changeLogDay(direction) {
+            const date = new Date(currentLogDay + 'T12:00:00');
+            date.setDate(date.getDate() + direction);
+            currentLogDay = getLocalDateString(date);
+            updateTimeChart();
         }
 
         // Update display
@@ -1247,7 +1259,6 @@
         function updateAdditionalCharts() {
             updateHeatmapChart();
             updateTimeChart();
-            updatePieChart();
         }
 
         function updateHeatmapChart() {
@@ -1304,17 +1315,60 @@
 
         function updateTimeChart() {
             const ctx = document.getElementById('timeChart').getContext('2d');
-            const hourData = Array(24).fill(0);
             
-            Object.values(data).forEach(dayData => {
-                Object.values(dayData.signals || {}).forEach(signals => {
-                    signals.forEach(signal => {
-                        if (signal.time) {
-                            const hour = parseInt(signal.time.split(':')[0]);
-                            hourData[hour]++;
-                        }
-                    });
+            // Update day label
+            const dayDate = new Date(currentLogDay + 'T12:00:00');
+            document.getElementById('logDayLabel').textContent = 
+                dayDate.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' });
+            
+            // Get data for current day
+            const dayData = data[currentLogDay];
+            const hourlyData = {};
+            
+            // Initialize hourly data structure
+            for (let hour = 0; hour < 24; hour++) {
+                hourlyData[hour] = {};
+                Object.keys(SIGNAL_TYPES).forEach(signalType => {
+                    hourlyData[hour][signalType] = { active: 0, passive: 0 };
                 });
+            }
+            
+            // Populate hourly data
+            if (dayData && dayData.signals) {
+                Object.keys(SIGNAL_TYPES).forEach(signalType => {
+                    if (dayData.signals[signalType]) {
+                        dayData.signals[signalType].forEach(signal => {
+                            if (signal.time) {
+                                const hour = parseInt(signal.time.split(':')[0]);
+                                if (signal.state === 1) {
+                                    hourlyData[hour][signalType].active++;
+                                } else {
+                                    hourlyData[hour][signalType].passive++;
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Create datasets for stacked bars
+            const datasets = Object.keys(SIGNAL_TYPES).map(signalType => {
+                const config = SIGNAL_TYPES[signalType];
+                const data = [];
+                
+                for (let hour = 0; hour < 24; hour++) {
+                    const total = hourlyData[hour][signalType].active + hourlyData[hour][signalType].passive;
+                    data.push(total);
+                }
+                
+                return {
+                    label: config.name,
+                    data: data,
+                    backgroundColor: config.color,
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderWidth: 1,
+                    hourlyData: hourlyData // Store for tooltip
+                };
             });
 
             if (timeChart) timeChart.destroy();
@@ -1323,19 +1377,38 @@
                 type: 'bar',
                 data: {
                     labels: Array.from({length: 24}, (_, i) => `${String(i).padStart(2, '0')}:00`),
-                    datasets: [{
-                        label: 'Signal Count',
-                        data: hourData,
-                        backgroundColor: '#8b5cf6'
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#00ff7f' } } },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: { 
+                        legend: { labels: { color: '#00ff7f' } },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const hour = context.dataIndex;
+                                    const signalType = Object.keys(SIGNAL_TYPES)[context.datasetIndex];
+                                    const hourData = hourlyData[hour][signalType];
+                                    const activeState = SIGNAL_TYPES[signalType].states[1];
+                                    const passiveState = SIGNAL_TYPES[signalType].states[0];
+                                    return `${activeState}: ${hourData.active}, ${passiveState}: ${hourData.passive}`;
+                                }
+                            }
+                        }
+                    },
                     scales: {
-                        x: { ticks: { color: '#00ff7f' }, grid: { color: 'rgba(0, 255, 127, 0.1)' } },
+                        x: { 
+                            stacked: true,
+                            ticks: { color: '#00ff7f' }, 
+                            grid: { color: 'rgba(0, 255, 127, 0.1)' } 
+                        },
                         y: { 
+                            stacked: true,
                             beginAtZero: true,
                             ticks: { 
                                 color: '#00ff7f',
@@ -1351,40 +1424,7 @@
             });
         }
 
-        function updatePieChart() {
-            const ctx = document.getElementById('pieChart').getContext('2d');
-            
-            let totals = {};
-            Object.keys(SIGNAL_TYPES).forEach(signalType => {
-                totals[signalType] = 0;
-            });
-            
-            Object.values(data).forEach(dayData => {
-                Object.keys(SIGNAL_TYPES).forEach(signalType => {
-                    if (dayData.signals && dayData.signals[signalType]) {
-                        totals[signalType] += dayData.signals[signalType].length;
-                    }
-                });
-            });
 
-            if (pieChart) pieChart.destroy();
-
-            pieChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(SIGNAL_TYPES).map(key => SIGNAL_TYPES[key].name),
-                    datasets: [{
-                        data: Object.keys(SIGNAL_TYPES).map(key => totals[key]),
-                        backgroundColor: Object.keys(SIGNAL_TYPES).map(key => SIGNAL_TYPES[key].color)
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#00ff7f' } } }
-                }
-            });
-        }
 
         // Register service worker
         if ('serviceWorker' in navigator) {
