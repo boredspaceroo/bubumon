@@ -389,6 +389,77 @@
         .signal-box.empty {
             opacity: 0.3;
         }
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .prediction-bar {
+            height: 80px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 127, 0.2);
+            position: relative;
+            overflow: hidden;
+            background: rgba(15, 32, 39, 0.4);
+        }
+        .prediction-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, #00ff7f, rgba(0, 255, 127, 0.6));
+            transition: height 0.3s ease;
+            border-radius: 0 0 7px 7px;
+        }
+        .prediction-label {
+            position: absolute;
+            top: 4px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(0, 255, 127, 0.9);
+        }
+        .prediction-value {
+            position: absolute;
+            bottom: 4px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+        }
+        .time-prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .time-day-column {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .time-day-header {
+            font-size: 10px;
+            font-weight: 600;
+            text-align: center;
+            color: rgba(0, 255, 127, 0.8);
+            padding: 2px;
+        }
+        .time-slot {
+            height: 16px;
+            border-radius: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
         .stats-container {
             background: rgba(15, 32, 39, 0.4);
             border: 1px solid rgba(0, 255, 127, 0.2);
@@ -619,6 +690,62 @@
 
 
 
+            <div class="card">
+                <div class="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    <span>WEEKLY SIGNAL PREDICTOR</span>
+                </div>
+                <div class="prediction-grid" id="weeklyPredictor">
+                    <!-- Grid will be populated by JavaScript -->
+                </div>
+                <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Predicts presence probability based on historical signal patterns</div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18"/>
+                        <path d="M7 12l3-3 3 3 5-5"/>
+                    </svg>
+                    <span>SIGNAL EVOLUTION</span>
+                </div>
+                
+                <div class="week-nav">
+                    <button class="week-nav-btn" onclick="changeEvolutionMonth(-1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15,18 9,12 15,6"/>
+                        </svg>
+                    </button>
+                    <div class="week-label" id="evolutionMonthLabel"></div>
+                    <button class="week-nav-btn" onclick="changeEvolutionMonth(1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9,18 15,12 9,6"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="evolutionChart"></canvas>
+                </div>
+                <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Shows how signal strength evolves over time for each weekday</div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12,6 12,12 16,14"/>
+                    </svg>
+                    <span>OPTIMAL SIGHTING TIMES</span>
+                </div>
+                <div class="time-prediction-grid" id="timePredictionGrid">
+                    <!-- Grid will be populated by JavaScript -->
+                </div>
+                <div style="font-size: 11px; color: rgba(0, 255, 127, 0.6); margin-top: 8px;">Best times for sightings based on signal transition patterns</div>
+            </div>
+
             <div class="stats-container">
                 <div class="section-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -642,6 +769,8 @@
         let currentWeekOffset = 0;
         let currentLogDay = getLocalDateString();
         let currentDailyLogWeekOffset = 0;
+        let currentEvolutionMonth = 0;
+        let evolutionChart = null;
         let currentDate = getLocalDateString();
         let activityChart = null;
         let trendChart = null;
@@ -900,6 +1029,90 @@
             updateDailyLogGrid();
         }
 
+        // Change evolution month
+        function changeEvolutionMonth(direction) {
+            currentEvolutionMonth += direction;
+            updateEvolutionChart();
+        }
+
+        // Calculate signal strength for a specific date
+        function calculateSignalStrength(dateStr) {
+            const dayData = data[dateStr];
+            if (!dayData || !dayData.signals) return 0;
+            
+            let strength = 0;
+            const date = new Date(dateStr + 'T12:00:00');
+            const hour = new Date().getHours();
+            
+            // Bubu presence (strong indicator)
+            if (dayData.signals.bubu && dayData.signals.bubu.length > 0) {
+                strength += dayData.signals.bubu.length * 30; // 30 points per sighting
+                if (dayData.signals.bubu.length > 1) {
+                    strength += 20; // Ultra rare bonus
+                }
+            }
+            
+            // Plasma evening activity (4pm-midnight weighted)
+            if (dayData.signals.plasma && dayData.signals.plasma.length > 0) {
+                dayData.signals.plasma.forEach(signal => {
+                    const signalHour = parseInt(signal.time.split(':')[0]);
+                    const weight = (signalHour >= 16 || signalHour <= 0) ? 2 : 1;
+                    strength += 10 * weight;
+                });
+                
+                // Hyper-activity bonus
+                if (dayData.signals.plasma.length > 1) {
+                    strength += 15;
+                }
+            }
+            
+            // Transporter state changes
+            if (dayData.signals.transporter && dayData.signals.transporter.length > 0) {
+                const changes = dayData.signals.transporter.length;
+                strength += changes * 8;
+                
+                // Hyper-activity bonus
+                if (changes > 1) {
+                    strength += 25;
+                }
+            }
+            
+            // Tractor beam (hit and miss, lower weight)
+            if (dayData.signals.tractorBeam && dayData.signals.tractorBeam.length > 0) {
+                strength += dayData.signals.tractorBeam.length * 5;
+            }
+            
+            return Math.min(strength, 100); // Cap at 100
+        }
+
+        // Calculate time-weighted signal strength for weekday
+        function calculateWeekdayStrength(dayOfWeek) {
+            let totalStrength = 0;
+            let totalWeight = 0;
+            const now = new Date();
+            
+            Object.keys(data).forEach(dateStr => {
+                const date = new Date(dateStr + 'T12:00:00');
+                const dow = date.getDay() === 0 ? 7 : date.getDay();
+                
+                if (dow === dayOfWeek) {
+                    const weeksAgo = Math.floor((now - date) / (7 * 24 * 60 * 60 * 1000));
+                    let weight = 1;
+                    
+                    // Time decay weighting
+                    if (weeksAgo <= 4) weight = 1.0;
+                    else if (weeksAgo <= 8) weight = 0.5;
+                    else weight = 0.25;
+                    
+                    const strength = calculateSignalStrength(dateStr);
+                    totalStrength += strength * weight;
+                    totalWeight += weight;
+                }
+            });
+            
+            return totalWeight > 0 ? totalStrength / totalWeight : 0;
+        }
+
         // Update display
         function updateDisplay() {
             // Update current date using system timezone
@@ -938,7 +1151,7 @@
                 }
             });
 
-            // Sort by timestamp
+            // Sort by timestamp (earliest first)
             allEvents.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
             // Render events
@@ -1291,11 +1504,182 @@
             dailyLogGrid.innerHTML = html;
         }
 
+        // Update weekly predictor
+        function updateWeeklyPredictor() {
+            const predictorGrid = document.getElementById('weeklyPredictor');
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            
+            let html = '';
+            
+            days.forEach((day, index) => {
+                const strength = calculateWeekdayStrength(index + 1);
+                const percentage = Math.round(strength);
+                
+                html += `
+                    <div class="prediction-bar">
+                        <div class="prediction-label">${day}</div>
+                        <div class="prediction-fill" style="height: ${strength}%;"></div>
+                        <div class="prediction-value">${percentage}%</div>
+                    </div>
+                `;
+            });
+            
+            predictorGrid.innerHTML = html;
+        }
+
+        // Update evolution chart
+        function updateEvolutionChart() {
+            const ctx = document.getElementById('evolutionChart').getContext('2d');
+            
+            // Calculate month start
+            const today = new Date();
+            const monthStart = new Date(today.getFullYear(), today.getMonth() + currentEvolutionMonth, 1);
+            
+            // Update month label
+            document.getElementById('evolutionMonthLabel').textContent = 
+                monthStart.toLocaleDateString('en', { month: 'long', year: 'numeric' });
+            
+            // Get weeks in month
+            const weeks = [];
+            const labels = [];
+            
+            for (let week = 0; week < 5; week++) {
+                const weekStart = new Date(monthStart);
+                weekStart.setDate(1 + (week * 7));
+                if (weekStart.getMonth() === monthStart.getMonth()) {
+                    weeks.push(weekStart);
+                    labels.push(`Week ${week + 1}`);
+                }
+            }
+            
+            // Create datasets for each day of week
+            const datasets = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, dayIndex) => {
+                const data = weeks.map(weekStart => {
+                    // Calculate strength for this day in this week
+                    const targetDate = new Date(weekStart);
+                    targetDate.setDate(weekStart.getDate() + dayIndex);
+                    const dateStr = getLocalDateString(targetDate);
+                    return calculateSignalStrength(dateStr);
+                });
+                
+                const colors = ['#6b8e23', '#8b5cf6', '#eab308', '#ec4899', '#00ff7f', '#ff6b6b', '#4ecdc4'];
+                
+                return {
+                    label: day,
+                    data: data,
+                    borderColor: colors[dayIndex],
+                    backgroundColor: colors[dayIndex] + '20',
+                    tension: 0.3
+                };
+            });
+
+            if (evolutionChart) evolutionChart.destroy();
+
+            evolutionChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#00ff7f' } } },
+                    scales: {
+                        x: { ticks: { color: '#00ff7f' }, grid: { color: 'rgba(0, 255, 127, 0.1)' } },
+                        y: { 
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: '#00ff7f' }, 
+                            grid: { color: 'rgba(0, 255, 127, 0.1)' } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update time prediction grid
+        function updateTimePredictionGrid() {
+            const grid = document.getElementById('timePredictionGrid');
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const timeSlots = ['Morning', 'Afternoon', 'Evening', 'Night'];
+            
+            let html = '';
+            
+            days.forEach((day, dayIndex) => {
+                html += `<div class="time-day-column">`;
+                html += `<div class="time-day-header">${day}</div>`;
+                
+                timeSlots.forEach((slot, slotIndex) => {
+                    const strength = calculateTimeSlotStrength(dayIndex + 1, slotIndex);
+                    const intensity = Math.min(strength / 50, 1); // Normalize to 0-1
+                    
+                    html += `<div class="time-slot" style="background-color: rgba(0, 255, 127, ${intensity});">`;
+                    html += slot.substring(0, 3);
+                    html += `</div>`;
+                });
+                
+                html += `</div>`;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        // Calculate time slot strength
+        function calculateTimeSlotStrength(dayOfWeek, timeSlot) {
+            let strength = 0;
+            let count = 0;
+            
+            Object.keys(data).forEach(dateStr => {
+                const date = new Date(dateStr + 'T12:00:00');
+                const dow = date.getDay() === 0 ? 7 : date.getDay();
+                
+                if (dow === dayOfWeek && data[dateStr].signals) {
+                    // Time slots: 0=Morning(6-12), 1=Afternoon(12-16), 2=Evening(16-22), 3=Night(22-6)
+                    const hourRanges = [[6,12], [12,16], [16,22], [22,6]];
+                    const [startHour, endHour] = hourRanges[timeSlot];
+                    
+                    // Check transporter state changes in time slot
+                    if (data[dateStr].signals.transporter) {
+                        data[dateStr].signals.transporter.forEach(signal => {
+                            const hour = parseInt(signal.time.split(':')[0]);
+                            const inSlot = endHour > startHour ? 
+                                (hour >= startHour && hour < endHour) :
+                                (hour >= startHour || hour < endHour);
+                            
+                            if (inSlot) {
+                                strength += 20;
+                                count++;
+                            }
+                        });
+                    }
+                    
+                    // Check plasma activity (evening weighted)
+                    if (data[dateStr].signals.plasma) {
+                        data[dateStr].signals.plasma.forEach(signal => {
+                            const hour = parseInt(signal.time.split(':')[0]);
+                            const inSlot = endHour > startHour ? 
+                                (hour >= startHour && hour < endHour) :
+                                (hour >= startHour || hour < endHour);
+                            
+                            if (inSlot) {
+                                const weight = timeSlot === 2 ? 2 : 1; // Evening bonus
+                                strength += 15 * weight;
+                                count++;
+                            }
+                        });
+                    }
+                }
+            });
+            
+            return count > 0 ? strength / count : 0;
+        }
+
         // Update dashboard
         function updateDashboard() {
             updateChart();
             updateWeeklyPatterns();
             updateDailyLogGrid();
+            updateWeeklyPredictor();
+            updateEvolutionChart();
+            updateTimePredictionGrid();
             updateAdditionalCharts();
             
             // Calculate all-time stats
